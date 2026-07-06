@@ -1,3 +1,18 @@
+# v0.4.0
+
+- Implement the extraction engine (`extractors/`):
+  - `extractors.markdown`: HTML→Markdown conversion (`markdownify`) plus
+    heading/link/image extraction from Markdown.
+  - `extractors.article.extract_article`: primary extraction via
+    `trafilatura`, falling back to `readability-lxml` (+ Markdown
+    conversion) when trafilatura yields too little content. Raises
+    `ExtractionError` when neither path produces usable content.
+- Add `pipeline.run_extract_stage`: turns fetched raw HTML into normalized
+  `Document`s (title, markdown content, headings, images, links, metadata).
+- Add `knowledge ingest <url>... [--file links.txt]` CLI command: fetch +
+  extract, write each document's Markdown to `output_dir/<id>.md`, print a
+  results table (title, URL, word count, extractor used).
+
 # v0.3.0
 
 - Restructure `knowledge_ingestor` into the guide's proposed package layout:

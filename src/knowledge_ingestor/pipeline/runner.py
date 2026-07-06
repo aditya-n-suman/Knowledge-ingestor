@@ -7,10 +7,14 @@ from ..core import FetchResult, RetryPolicy
 from ..core.cache import HtmlCache
 from ..core.downloader import fetch
 from ..core.progress import build_progress
+from ..exceptions import ExtractionError
+from ..extractors import extract_article
 from ..logger import logger
+from ..models import Document
+from ..utils import url_digest
 
-# Pipeline stages beyond resolve+fetch (detect, extract, normalize, enrich,
-# store, export) land in later milestones as plugins/extractors/storage mature.
+# Pipeline stages beyond resolve+fetch+extract (detect, enrich, store, export)
+# land in later milestones as plugins/storage mature.
 
 
 async def run_fetch_stage(
@@ -40,3 +44,27 @@ async def run_fetch_stage(
         fetched = await asyncio.gather(*(_run(url) for url in urls))
     results.extend(result for result in fetched if result is not None)
     return results
+
+
+def run_extract_stage(fetch_results: list[FetchResult]) -> list[Document]:
+    """Run the extract+normalize stage over fetched raw HTML, producing Documents."""
+    documents: list[Document] = []
+    for result in fetch_results:
+        try:
+            article = extract_article(result.content, result.resolved_url)
+        except ExtractionError:
+            logger.exception("failed to extract %s", result.resolved_url)
+            continue
+        documents.append(
+            Document(
+                id=url_digest(result.resolved_url),
+                title=article.title,
+                url=result.resolved_url,
+                content=article.markdown,
+                metadata=article.metadata,
+                headings=article.headings,
+                images=article.images,
+                links=article.links,
+            )
+        )
+    return documents

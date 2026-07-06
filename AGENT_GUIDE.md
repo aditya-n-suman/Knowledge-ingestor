@@ -176,8 +176,10 @@ src/knowledge_ingestor
 
 Current implementation
 
-v0.3 networking core implemented: async session, resolver, retry, progress,
-raw HTML caching, and the resolve+fetch pipeline stage wired to the CLI.
+v0.3 networking core and v0.4 extraction engine implemented: async session,
+resolver, retry, progress, raw HTML caching, trafilatura/readability
+extraction with Markdown conversion, and the resolve+fetch+extract pipeline
+stages wired to the CLI (`fetch`, `ingest`).
 
 ---
 
@@ -658,6 +660,8 @@ Extraction engine
 * Trafilatura
 * Readability fallback
 * Markdown conversion
+
+Completed
 
 ---
 

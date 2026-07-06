@@ -19,10 +19,15 @@ pip install -e ".[dev]"
 knowledge version
 knowledge fetch https://example.com
 knowledge fetch --file links.txt
+knowledge ingest https://example.com
 ```
 
 `fetch` resolves each URL (following shortlink redirects), downloads it with
 retry/backoff, and caches the raw HTML on disk so repeat runs are free.
+
+`ingest` runs `fetch` and then extracts the main article content (via
+`trafilatura`, falling back to `readability` when needed) into Markdown,
+writing one file per document to `output_dir`.
 
 ## Configuration
 

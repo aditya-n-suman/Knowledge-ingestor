@@ -35,7 +35,7 @@ def test_extract_article_via_trafilatura():
     assert "Heading One" in article.headings
     assert "https://example.com/link" in article.links
     assert "https://example.com/img.png" in article.images
-    assert article.metadata["extractor"] == "trafilatura"
+    assert article.metadata["source"] == "trafilatura"
 
 
 def test_extract_article_falls_back_to_readability(monkeypatch):
@@ -51,7 +51,7 @@ def test_extract_article_falls_back_to_readability(monkeypatch):
 
     article = extract_article(html, url="https://example.com/fallback")
 
-    assert article.metadata["extractor"] == "readability"
+    assert article.metadata["source"] == "readability"
     assert "Fallback Heading" in article.headings
 
 

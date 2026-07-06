@@ -9,7 +9,7 @@ from .. import __version__
 from ..config import Config
 from ..core.session import close_client
 from ..logger import configure_logging
-from ..pipeline import run_extract_stage, run_fetch_stage
+from ..pipeline import run_fetch_stage, run_ingest_stage
 
 app = typer.Typer()
 console = Console()
@@ -81,12 +81,11 @@ def ingest(
     all_urls = _collect_urls(urls, file)
     config = Config.load()
 
-    async def _run() -> None:
+    async def _run() -> list:
         try:
-            fetch_results = await run_fetch_stage(all_urls, config)
+            return await run_ingest_stage(all_urls, config)
         finally:
             await close_client()
-        return run_extract_stage(fetch_results)
 
     documents = asyncio.run(_run())
 
@@ -95,7 +94,7 @@ def ingest(
     table.add_column("Title")
     table.add_column("URL")
     table.add_column("Words")
-    table.add_column("Extractor")
+    table.add_column("Source")
     for document in documents:
         (config.output_dir / f"{document.id}.md").write_text(
             document.content, encoding="utf-8"
@@ -104,6 +103,6 @@ def ingest(
             document.title,
             document.url,
             str(len(document.content.split())),
-            document.metadata.get("extractor", ""),
+            document.metadata.get("source", ""),
         )
     console.print(table)

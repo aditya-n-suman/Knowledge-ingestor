@@ -1,3 +1,24 @@
+# v0.5.0
+
+- Add the `YouTubePlugin` (`plugins/youtube.py`), the first concrete
+  implementation of the `Plugin` contract: fetches metadata/captions via
+  `yt-dlp`, downloads the transcript track through the shared HTTP session,
+  and normalizes title, description, transcript, and chapters into a
+  `Document` (chapters become `headings`, thumbnail becomes `images`).
+- Add `extractors.youtube`: pure transforms — `parse_vtt_transcript`
+  (flattens WebVTT captions to deduplicated plain text) and
+  `extract_chapters`.
+- Add `plugins.find_plugin`, a minimal registry that dispatches a URL to the
+  first matching plugin, fulfilling the guide's "adding a plugin never
+  requires changing the pipeline" principle.
+- Add `pipeline.run_ingest_stage`: routes each URL to a matching plugin when
+  one exists, otherwise falls back to the generic fetch+extract path. The
+  `knowledge ingest` CLI command now uses this instead of calling
+  fetch/extract directly.
+- Rename the article extractor's metadata key from `extractor` to `source`
+  so all Document sources (`trafilatura`, `readability`, `youtube`) share
+  one convention.
+
 # v0.4.0
 
 - Implement the extraction engine (`extractors/`):

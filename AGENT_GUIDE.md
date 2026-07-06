@@ -176,10 +176,12 @@ src/knowledge_ingestor
 
 Current implementation
 
-v0.3 networking core and v0.4 extraction engine implemented: async session,
-resolver, retry, progress, raw HTML caching, trafilatura/readability
-extraction with Markdown conversion, and the resolve+fetch+extract pipeline
-stages wired to the CLI (`fetch`, `ingest`).
+v0.3-v0.5 implemented: networking core (async session, resolver, retry,
+progress, raw HTML caching), extraction engine (trafilatura/readability +
+Markdown conversion), the first Plugin (`YouTubePlugin`: transcript,
+chapters, metadata) with a minimal plugin registry, and the
+resolve+fetch+extract+plugin-dispatch pipeline wired to the CLI (`fetch`,
+`ingest`).
 
 ---
 
@@ -672,6 +674,8 @@ YouTube support
 * Transcript
 * Chapters
 * Metadata
+
+Completed
 
 ---
 

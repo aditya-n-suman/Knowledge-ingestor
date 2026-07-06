@@ -80,7 +80,7 @@ def _via_trafilatura(html: str, url: str) -> ExtractedArticle | None:
         headings=extract_headings(markdown),
         images=extract_images(markdown),
         links=extract_links(markdown),
-        metadata={"extractor": "trafilatura", **metadata_dict},
+        metadata={"source": "trafilatura", **metadata_dict},
     )
 
 
@@ -101,5 +101,5 @@ def _via_readability(html: str) -> ExtractedArticle | None:
         headings=extract_headings(markdown),
         images=extract_images(markdown),
         links=extract_links(markdown),
-        metadata={"extractor": "readability"},
+        metadata={"source": "readability"},
     )

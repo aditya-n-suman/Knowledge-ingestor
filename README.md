@@ -20,14 +20,17 @@ knowledge version
 knowledge fetch https://example.com
 knowledge fetch --file links.txt
 knowledge ingest https://example.com
+knowledge ingest https://www.youtube.com/watch?v=...
 ```
 
 `fetch` resolves each URL (following shortlink redirects), downloads it with
 retry/backoff, and caches the raw HTML on disk so repeat runs are free.
 
-`ingest` runs `fetch` and then extracts the main article content (via
-`trafilatura`, falling back to `readability` when needed) into Markdown,
-writing one file per document to `output_dir`.
+`ingest` dispatches each URL to a matching plugin (currently YouTube:
+transcript, chapters, metadata) or, for everything else, falls back to
+fetch + article extraction (via `trafilatura`, falling back to
+`readability` when needed). Each result is written as Markdown to
+`output_dir`.
 
 ## Configuration
 

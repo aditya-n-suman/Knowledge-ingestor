@@ -7,14 +7,15 @@ from ..core import FetchResult, RetryPolicy
 from ..core.cache import HtmlCache
 from ..core.downloader import fetch
 from ..core.progress import build_progress
-from ..exceptions import ExtractionError
+from ..exceptions import ExtractionError, PluginError
 from ..extractors import extract_article
 from ..logger import logger
 from ..models import Document
+from ..plugins import Plugin, find_plugin
 from ..utils import url_digest
 
-# Pipeline stages beyond resolve+fetch+extract (detect, enrich, store, export)
-# land in later milestones as plugins/storage mature.
+# Pipeline stages beyond resolve+fetch+extract+plugin-dispatch (enrich, store,
+# export) land in later milestones as storage matures.
 
 
 async def run_fetch_stage(
@@ -67,4 +68,45 @@ def run_extract_stage(fetch_results: list[FetchResult]) -> list[Document]:
                 links=article.links,
             )
         )
+    return documents
+
+
+async def run_ingest_stage(
+    urls: list[str], config: Config | None = None
+) -> list[Document]:
+    """Detect a matching plugin for each URL, dispatching to it when found,
+    and falling back to the generic fetch+extract path otherwise."""
+    config = config or Config()
+    plugin_matches: list[tuple[str, Plugin]] = []
+    generic_urls: list[str] = []
+    for url in urls:
+        plugin = await find_plugin(url)
+        if plugin is not None:
+            plugin_matches.append((url, plugin))
+        else:
+            generic_urls.append(url)
+
+    documents: list[Document] = []
+
+    async def _run_plugin(url: str, plugin: Plugin) -> Document | None:
+        try:
+            raw = await plugin.fetch(url)
+            extracted = await plugin.extract(raw)
+            return await plugin.normalize(extracted)
+        except PluginError:
+            logger.exception("plugin failed to ingest %s", url)
+            return None
+
+    if plugin_matches:
+        plugin_documents = await asyncio.gather(
+            *(_run_plugin(url, plugin) for url, plugin in plugin_matches)
+        )
+        documents.extend(
+            document for document in plugin_documents if document is not None
+        )
+
+    if generic_urls:
+        fetch_results = await run_fetch_stage(generic_urls, config)
+        documents.extend(run_extract_stage(fetch_results))
+
     return documents

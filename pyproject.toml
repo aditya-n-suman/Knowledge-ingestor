@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "knowledge-ingestor"
-version = "0.4.0"
+version = "0.5.0"
 requires-python = ">=3.11"
 dependencies = [
     "httpx[http2]",
@@ -15,6 +15,7 @@ dependencies = [
     "markdownify",
     "readability-lxml",
     "pyyaml",
+    "yt-dlp",
 ]
 
 [project.optional-dependencies]

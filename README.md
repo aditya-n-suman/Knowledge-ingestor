@@ -25,6 +25,9 @@ knowledge ingest https://github.com/owner/repo
 knowledge ingest https://github.com/owner/repo/wiki
 knowledge ingest https://github.com/owner/repo/blob/main/docs/guide.md
 knowledge crawl https://docs.example.com/ --depth 2 --max-pages 50
+knowledge ingest https://example.com --enrich
+knowledge search "some query"
+knowledge search "some query" --semantic
 ```
 
 `fetch` resolves each URL (following shortlink redirects), downloads it with
@@ -43,6 +46,17 @@ otherwise following same-domain links up to `--depth` — then runs each
 discovered URL through the same dispatch and storage as `ingest`. It
 respects `robots.txt` and stops at `--max-pages`.
 
+`--enrich` (on `ingest`/`crawl`) generates a summary and flashcards, and
+computes an embedding, for each Document via `config.ai_provider`. AI is
+opt-in: with no provider configured this is a no-op. Currently the only
+provider is `ollama`, talking to a local [Ollama](https://ollama.com)
+server — no API key needed, but the model must support the calls you use
+(chat models handle summary/flashcards; the Ollama server must be started
+with `--embeddings`, or with an embedding-capable model, for `embed` to
+work). `search` looks up stored Documents by substring by default, or by
+embedding similarity with `--semantic` (requires documents ingested with
+`--enrich` and a working embedding provider).
+
 ## Configuration
 
 Settings are loaded from `knowledge.yaml` in the current directory if present:
@@ -56,6 +70,9 @@ output_dir: output
 max_depth: 2
 max_pages: 50
 storage_backend: markdown  # markdown | json | sqlite
+ai_provider: ""  # "" (disabled) | ollama
+ai_model: llama3
+ollama_base_url: http://localhost:11434
 plugins:
   github: true
 ```

@@ -10,7 +10,13 @@ from ..config import Config
 from ..core.session import close_client
 from ..logger import configure_logging
 from ..models import Document
-from ..pipeline import discover_urls, run_fetch_stage, run_ingest_stage
+from ..pipeline import (
+    discover_urls,
+    run_enrich_stage,
+    run_fetch_stage,
+    run_ingest_stage,
+    semantic_search,
+)
 from ..storage import build_storage
 
 app = typer.Typer()
@@ -98,6 +104,11 @@ def fetch(
 def ingest(
     urls: list[str] = typer.Argument(None, help="URLs to ingest"),
     file: Path = typer.Option(None, "--file", "-f", help="File with one URL per line"),
+    enrich: bool = typer.Option(
+        False,
+        "--enrich",
+        help="Generate summary/flashcards/embedding via config.ai_provider",
+    ),
     verbose: int = typer.Option(0, "--verbose", "-v", count=True),
 ) -> None:
     """Fetch, extract, and store one or more URLs as Documents."""
@@ -108,6 +119,8 @@ def ingest(
     async def _run() -> list[Document]:
         try:
             documents = await run_ingest_stage(all_urls, config)
+            if enrich:
+                documents = await run_enrich_stage(documents, config)
             await _persist_documents(documents, config)
             return documents
         finally:
@@ -122,6 +135,11 @@ def crawl(
     seed_url: str = typer.Argument(..., help="Seed URL to discover pages from"),
     depth: int = typer.Option(None, "--depth", help="Max link-traversal depth"),
     max_pages: int = typer.Option(None, "--max-pages", help="Max pages to ingest"),
+    enrich: bool = typer.Option(
+        False,
+        "--enrich",
+        help="Generate summary/flashcards/embedding via config.ai_provider",
+    ),
     verbose: int = typer.Option(0, "--verbose", "-v", count=True),
 ) -> None:
     """Discover pages from a seed URL (sitemap.xml or link traversal) and ingest each one."""
@@ -137,6 +155,8 @@ def crawl(
             urls = await discover_urls(seed_url, config)
             console.print(f"Discovered {len(urls)} page(s)")
             documents = await run_ingest_stage(urls, config)
+            if enrich:
+                documents = await run_enrich_stage(documents, config)
             await _persist_documents(documents, config)
             return documents
         finally:
@@ -144,3 +164,39 @@ def crawl(
 
     documents = asyncio.run(_run())
     _print_documents_table(documents)
+
+
+@app.command()
+def search(
+    query: str = typer.Argument(..., help="Search query"),
+    semantic: bool = typer.Option(
+        False,
+        "--semantic",
+        help="Rank by embedding similarity (requires config.ai_provider)",
+    ),
+    limit: int = typer.Option(10, "--limit", help="Max results to show"),
+    verbose: int = typer.Option(0, "--verbose", "-v", count=True),
+) -> None:
+    """Search stored Documents by substring, or by embedding similarity with --semantic."""
+    configure_logging(verbose)
+    config = Config.load()
+    storage = build_storage(config)
+
+    async def _run() -> list[tuple[Document, float | None]]:
+        if semantic:
+            return await semantic_search(query, storage, config)
+        return [(document, None) for document in await storage.search(query)]
+
+    results = asyncio.run(_run())
+
+    table = Table()
+    table.add_column("Title")
+    table.add_column("URL")
+    if semantic:
+        table.add_column("Score")
+    for document, score in results[:limit]:
+        row = [document.title, document.url]
+        if semantic:
+            row.append(f"{score:.3f}")
+        table.add_row(*row)
+    console.print(table)

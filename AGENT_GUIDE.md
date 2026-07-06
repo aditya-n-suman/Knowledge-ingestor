@@ -176,15 +176,17 @@ src/knowledge_ingestor
 
 Current implementation
 
-v0.3-v0.8 implemented: networking core (async session, resolver, retry,
+v0.3-v0.9 implemented: networking core (async session, resolver, retry,
 progress, raw HTML caching), extraction engine (trafilatura/readability +
 Markdown conversion), a plugin registry with `YouTubePlugin` (transcript,
 chapters, metadata) and `GitHubPlugin` (README, wiki page, single doc
 file), a documentation crawler (sitemap-first, same-domain link traversal
 with depth control and robots.txt), a storage layer (Markdown/JSON/SQLite
-backends behind one `StorageBackend` contract), and the full
-resolve+discover+fetch+extract+plugin-dispatch+store pipeline wired to the
-CLI (`fetch`, `ingest`, `crawl`).
+backends behind one `StorageBackend` contract), an optional AI layer
+(`AIProvider` contract, `OllamaProvider`: summary, flashcards, embeddings)
+feeding an enrich pipeline stage and embedding-similarity search, and the
+full resolve+discover+fetch+extract+plugin-dispatch+store(+enrich) pipeline
+wired to the CLI (`fetch`, `ingest`, `crawl`, `search`).
 
 ---
 
@@ -726,6 +728,8 @@ AI
 * Flashcards
 * Embeddings
 * Search
+
+Completed (Ollama provider only; OpenAI/Anthropic/Gemini remain future work)
 
 ---
 

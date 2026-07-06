@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from .flashcard import Flashcard
+
 
 @dataclass
 class Document:
@@ -14,3 +16,6 @@ class Document:
     headings: list[str] = field(default_factory=list)
     images: list[str] = field(default_factory=list)
     links: list[str] = field(default_factory=list)
+    summary: str = ""
+    flashcards: list[Flashcard] = field(default_factory=list)
+    embedding: list[float] = field(default_factory=list)

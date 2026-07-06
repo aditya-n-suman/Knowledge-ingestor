@@ -1,3 +1,33 @@
+# v0.9.0
+
+- Add the AI layer (`ai/`), scoped to this milestone's four capabilities —
+  summary, flashcards, embeddings, search:
+  - `AIProvider` contract (`summarize`, `generate_flashcards`, `embed`).
+    AI stays optional per the guide: `Config.ai_provider` defaults to `""`,
+    and every enrichment call is a no-op until a provider is configured.
+  - `OllamaProvider`, the first (and currently only) implementation,
+    talking to a local Ollama server. Flashcard generation uses Ollama's
+    structured-output `format` (a JSON Schema) so parsing is exact rather
+    than regex/markdown-scraped.
+  - `Document` gains `summary`, `flashcards` (`list[Flashcard]`, new
+    `models.Flashcard`), and `embedding` fields; all three storage backends
+    round-trip them.
+- Add `pipeline.run_enrich_stage`: populates summary/flashcards/embedding
+  per Document via the configured provider, logging and skipping (not
+  crashing) on a per-document `AIError` — partial enrichment survives if,
+  say, embeddings fail but summarization succeeded.
+- Add `pipeline.semantic_search`: cosine-similarity ranking of stored
+  Documents against a query embedding.
+- CLI: `knowledge ingest`/`crawl` gain `--enrich`; new
+  `knowledge search <query> [--semantic]` (plain substring search by
+  default, embedding-similarity ranking with `--semantic`).
+- Verified live against a local Ollama instance (`qwen2.5:7b-instruct`):
+  summarize and flashcard generation work end-to-end. This particular
+  server wasn't started with `--embeddings`, so the embed path was only
+  exercised via mocked tests — the pipeline degrades gracefully in this
+  case, persisting summary/flashcards while leaving `embedding` empty
+  rather than failing the whole ingest.
+
 # v0.8.0
 
 - Implement the storage layer (`storage/`), giving `StorageBackend` (defined

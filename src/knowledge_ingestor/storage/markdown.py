@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import asdict
 from pathlib import Path
 
 import yaml
 
-from ..models import Document
+from ..models import Document, Flashcard
 from .base import StorageBackend
 from .filesystem import FilesystemPaths
 
@@ -37,6 +38,9 @@ class MarkdownStorage(StorageBackend):
             "headings": document.headings,
             "images": document.images,
             "links": document.links,
+            "summary": document.summary,
+            "flashcards": [asdict(card) for card in document.flashcards],
+            "embedding": document.embedding,
         }
         text = f"---\n{yaml.safe_dump(frontmatter, sort_keys=False)}---\n\n{document.content}"
         self.paths.path_for(document.id).write_text(text, encoding="utf-8")
@@ -75,4 +79,7 @@ def _parse(text: str) -> Document:
         headings=frontmatter.get("headings") or [],
         images=frontmatter.get("images") or [],
         links=frontmatter.get("links") or [],
+        summary=frontmatter.get("summary", ""),
+        flashcards=[Flashcard(**card) for card in frontmatter.get("flashcards") or []],
+        embedding=frontmatter.get("embedding") or [],
     )

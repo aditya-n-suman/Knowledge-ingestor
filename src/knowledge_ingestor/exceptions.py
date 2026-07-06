@@ -16,3 +16,7 @@ class PluginError(IngestorError):
 
 class StorageError(IngestorError):
     """Raised when a storage backend fails to save, load, delete, or search."""
+
+
+class AIError(IngestorError):
+    """Raised when an AI provider fails to summarize, generate, or embed."""

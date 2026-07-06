@@ -19,6 +19,9 @@ class Config:
     max_depth: int = 2
     max_pages: int = 50
     storage_backend: str = "markdown"
+    ai_provider: str = ""
+    ai_model: str = "llama3"
+    ollama_base_url: str = "http://localhost:11434"
 
     @classmethod
     def from_file(cls, path: Path) -> Config:

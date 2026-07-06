@@ -5,7 +5,7 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
-from ..models import Document
+from ..models import Document, Flashcard
 from .base import StorageBackend
 from .filesystem import FilesystemPaths
 
@@ -36,7 +36,7 @@ class JSONStorage(StorageBackend):
         path = self.paths.path_for(document_id)
         if not path.exists():
             return None
-        return Document(**json.loads(path.read_text(encoding="utf-8")))
+        return _document_from_dict(json.loads(path.read_text(encoding="utf-8")))
 
     def _delete(self, document_id: str) -> None:
         self.paths.path_for(document_id).unlink(missing_ok=True)
@@ -45,7 +45,12 @@ class JSONStorage(StorageBackend):
         needle = query.lower()
         matches = []
         for path in self.paths.all_paths():
-            document = Document(**json.loads(path.read_text(encoding="utf-8")))
+            document = _document_from_dict(json.loads(path.read_text(encoding="utf-8")))
             if needle in document.title.lower() or needle in document.content.lower():
                 matches.append(document)
         return matches
+
+
+def _document_from_dict(data: dict) -> Document:
+    data["flashcards"] = [Flashcard(**f) for f in data.get("flashcards") or []]
+    return Document(**data)

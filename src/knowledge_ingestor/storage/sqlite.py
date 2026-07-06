@@ -3,9 +3,10 @@ from __future__ import annotations
 import asyncio
 import json
 import sqlite3
+from dataclasses import asdict
 from pathlib import Path
 
-from ..models import Document
+from ..models import Document, Flashcard
 from .base import StorageBackend
 
 _SCHEMA = """
@@ -17,9 +18,17 @@ CREATE TABLE IF NOT EXISTS documents (
     metadata TEXT,
     headings TEXT,
     images TEXT,
-    links TEXT
+    links TEXT,
+    summary TEXT,
+    flashcards TEXT,
+    embedding TEXT
 )
 """
+
+_COLUMNS = (
+    "id, title, url, content, metadata, headings, images, links, "
+    "summary, flashcards, embedding"
+)
 
 
 class SQLiteStorage(StorageBackend):
@@ -46,13 +55,15 @@ class SQLiteStorage(StorageBackend):
     def _save(self, document: Document) -> None:
         with sqlite3.connect(self.db_path) as connection:
             connection.execute(
-                """
-                INSERT INTO documents (id, title, url, content, metadata, headings, images, links)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                f"""
+                INSERT INTO documents ({_COLUMNS})
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     title=excluded.title, url=excluded.url, content=excluded.content,
                     metadata=excluded.metadata, headings=excluded.headings,
-                    images=excluded.images, links=excluded.links
+                    images=excluded.images, links=excluded.links,
+                    summary=excluded.summary, flashcards=excluded.flashcards,
+                    embedding=excluded.embedding
                 """,
                 _to_row(document),
             )
@@ -60,8 +71,7 @@ class SQLiteStorage(StorageBackend):
     def _load(self, document_id: str) -> Document | None:
         with sqlite3.connect(self.db_path) as connection:
             row = connection.execute(
-                "SELECT id, title, url, content, metadata, headings, images, links "
-                "FROM documents WHERE id = ?",
+                f"SELECT {_COLUMNS} FROM documents WHERE id = ?",
                 (document_id,),
             ).fetchone()
         return _from_row(row) if row else None
@@ -74,8 +84,8 @@ class SQLiteStorage(StorageBackend):
         needle = f"%{query.lower()}%"
         with sqlite3.connect(self.db_path) as connection:
             rows = connection.execute(
-                "SELECT id, title, url, content, metadata, headings, images, links "
-                "FROM documents WHERE LOWER(title) LIKE ? OR LOWER(content) LIKE ?",
+                f"SELECT {_COLUMNS} FROM documents "
+                "WHERE LOWER(title) LIKE ? OR LOWER(content) LIKE ?",
                 (needle, needle),
             ).fetchall()
         return [_from_row(row) for row in rows]
@@ -91,11 +101,26 @@ def _to_row(document: Document) -> tuple:
         json.dumps(document.headings),
         json.dumps(document.images),
         json.dumps(document.links),
+        document.summary,
+        json.dumps([asdict(card) for card in document.flashcards]),
+        json.dumps(document.embedding),
     )
 
 
 def _from_row(row: tuple) -> Document:
-    document_id, title, url, content, metadata, headings, images, links = row
+    (
+        document_id,
+        title,
+        url,
+        content,
+        metadata,
+        headings,
+        images,
+        links,
+        summary,
+        flashcards,
+        embedding,
+    ) = row
     return Document(
         id=document_id,
         title=title,
@@ -105,4 +130,7 @@ def _from_row(row: tuple) -> Document:
         headings=json.loads(headings),
         images=json.loads(images),
         links=json.loads(links),
+        summary=summary or "",
+        flashcards=[Flashcard(**card) for card in json.loads(flashcards or "[]")],
+        embedding=json.loads(embedding or "[]"),
     )

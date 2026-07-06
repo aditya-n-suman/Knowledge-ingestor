@@ -176,12 +176,14 @@ src/knowledge_ingestor
 
 Current implementation
 
-v0.3-v0.6 implemented: networking core (async session, resolver, retry,
+v0.3-v0.7 implemented: networking core (async session, resolver, retry,
 progress, raw HTML caching), extraction engine (trafilatura/readability +
 Markdown conversion), a plugin registry with `YouTubePlugin` (transcript,
 chapters, metadata) and `GitHubPlugin` (README, wiki page, single doc
-file), and the resolve+fetch+extract+plugin-dispatch pipeline wired to the
-CLI (`fetch`, `ingest`).
+file), a documentation crawler (sitemap-first, same-domain link traversal
+with depth control and robots.txt), and the full
+resolve+discover+fetch+extract+plugin-dispatch pipeline wired to the CLI
+(`fetch`, `ingest`, `crawl`).
 
 ---
 
@@ -698,6 +700,8 @@ Documentation crawler
 * Internal link traversal
 * Depth control
 * Sitemap support
+
+Completed
 
 ---
 

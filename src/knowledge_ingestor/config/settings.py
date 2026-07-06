@@ -16,6 +16,8 @@ class Config:
     cache_dir: Path = field(default_factory=lambda: Path("cache"))
     output_dir: Path = field(default_factory=lambda: Path("output"))
     plugins: dict[str, bool] = field(default_factory=dict)
+    max_depth: int = 2
+    max_pages: int = 50
 
     @classmethod
     def from_file(cls, path: Path) -> Config:

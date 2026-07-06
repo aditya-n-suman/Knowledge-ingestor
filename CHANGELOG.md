@@ -1,3 +1,19 @@
+# v0.7.0
+
+- Add the documentation crawler (`pipeline.discover_urls`): given a seed
+  URL, prefers its `sitemap.xml` (following one level of sitemap indexes,
+  `core.sitemap.discover_sitemap_urls`) and otherwise falls back to
+  breadth-first, same-domain link traversal (`pipeline.crawl_links`).
+- The crawler respects `robots.txt` (via `urllib.robotparser`), a
+  configurable `max_depth` and `max_pages` (new `Config` fields, defaults
+  2/50), and fetches each traversal depth concurrently (bounded by
+  `config.concurrency`), reusing the same cache and retry policy as
+  `run_fetch_stage`.
+- Add `knowledge crawl <seed_url> [--depth N] [--max-pages N]`: discovers
+  pages from the seed, then runs them through the existing
+  `run_ingest_stage` (plugin dispatch + generic extraction) and writes
+  Markdown files, same as `ingest`.
+
 # v0.6.0
 
 - Add the `GitHubPlugin` (`plugins/github.py`), covering three modes

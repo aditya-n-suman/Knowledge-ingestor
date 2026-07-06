@@ -24,6 +24,7 @@ knowledge ingest https://www.youtube.com/watch?v=...
 knowledge ingest https://github.com/owner/repo
 knowledge ingest https://github.com/owner/repo/wiki
 knowledge ingest https://github.com/owner/repo/blob/main/docs/guide.md
+knowledge crawl https://docs.example.com/ --depth 2 --max-pages 50
 ```
 
 `fetch` resolves each URL (following shortlink redirects), downloads it with
@@ -36,6 +37,11 @@ for everything else, falls back to fetch + article extraction (via
 written as Markdown to `output_dir`. Set `GITHUB_TOKEN` in the environment
 to use the GitHub API's higher authenticated rate limit.
 
+`crawl` discovers pages from a seed URL — preferring its `sitemap.xml`, and
+otherwise following same-domain links up to `--depth` — then runs each
+discovered URL through the same dispatch as `ingest`. It respects
+`robots.txt` and stops at `--max-pages`.
+
 ## Configuration
 
 Settings are loaded from `knowledge.yaml` in the current directory if present:
@@ -46,6 +52,8 @@ timeout: 30
 max_retries: 3
 cache_dir: cache
 output_dir: output
+max_depth: 2
+max_pages: 50
 plugins:
   github: true
 ```

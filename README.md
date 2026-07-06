@@ -1,3 +1,47 @@
-# Knowledge Crawler
+# Knowledge Ingestor
 
-Initial Git scaffold.
+A general-purpose knowledge ingestion framework: fetch, normalize, store, and
+export knowledge from heterogeneous sources (articles, docs, GitHub, YouTube,
+PDFs, ...) through a plugin-based pipeline. See [AGENT_GUIDE.md](AGENT_GUIDE.md)
+for the full architecture and roadmap.
+
+## Install
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+```
+
+## Usage
+
+```bash
+knowledge version
+knowledge fetch https://example.com
+knowledge fetch --file links.txt
+```
+
+`fetch` resolves each URL (following shortlink redirects), downloads it with
+retry/backoff, and caches the raw HTML on disk so repeat runs are free.
+
+## Configuration
+
+Settings are loaded from `knowledge.yaml` in the current directory if present:
+
+```yaml
+concurrency: 8
+timeout: 30
+max_retries: 3
+cache_dir: cache
+output_dir: output
+plugins:
+  github: true
+```
+
+## Development
+
+```bash
+pytest
+ruff check .
+ruff format .
+```

@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "knowledge-ingestor"
+version = "0.3.0"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx[http2]",
+    "typer",
+    "rich",
+    "trafilatura",
+    "beautifulsoup4",
+    "markdownify",
+    "readability-lxml",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-asyncio", "respx", "ruff"]
+
+[project.scripts]
+knowledge = "knowledge_ingestor.cli:app"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[tool.setuptools.packages.find]
+where = ["src"]

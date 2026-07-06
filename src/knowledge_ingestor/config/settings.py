@@ -22,6 +22,8 @@ class Config:
     ai_provider: str = ""
     ai_model: str = "llama3"
     ollama_base_url: str = "http://localhost:11434"
+    min_request_delay: float = 0.0
+    max_request_delay: float = 0.0
 
     @classmethod
     def from_file(cls, path: Path) -> Config:

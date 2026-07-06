@@ -19,6 +19,7 @@ async def discover_urls(seed_url: str, config: Config | None = None) -> list[str
     """Discover pages reachable from seed_url, via its sitemap.xml if one
     exists, otherwise via same-domain link traversal bounded by config."""
     config = config or Config()
+    get_client(config)
     sitemap_urls = await discover_sitemap_urls(seed_url, limit=config.max_pages)
     if sitemap_urls:
         return sitemap_urls[: config.max_pages]
@@ -29,6 +30,7 @@ async def crawl_links(seed_url: str, config: Config | None = None) -> list[str]:
     """Breadth-first, same-domain link traversal from seed_url, respecting
     config.max_depth, config.max_pages, and robots.txt."""
     config = config or Config()
+    get_client(config)
     cache = HtmlCache(config.cache_dir)
     policy = RetryPolicy(max_attempts=config.max_retries)
     semaphore = asyncio.Semaphore(config.concurrency)

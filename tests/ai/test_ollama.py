@@ -53,6 +53,38 @@ async def test_generate_flashcards_raises_on_malformed_json():
 
 
 @respx.mock
+async def test_extract_links():
+    respx.post("http://localhost:11434/api/generate").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "response": (
+                    '{"links": ["https://example.com/a", "https://example.com/b"]}'
+                )
+            },
+        )
+    )
+    provider = OllamaProvider(model="test-model")
+
+    links = await provider.extract_links("Check out https://example.com/a and b")
+
+    assert links == ["https://example.com/a", "https://example.com/b"]
+    await provider.aclose()
+
+
+@respx.mock
+async def test_extract_links_raises_on_malformed_json():
+    respx.post("http://localhost:11434/api/generate").mock(
+        return_value=httpx.Response(200, json={"response": "not json"})
+    )
+    provider = OllamaProvider(model="test-model")
+
+    with pytest.raises(AIError):
+        await provider.extract_links("some text")
+    await provider.aclose()
+
+
+@respx.mock
 async def test_embed():
     respx.post("http://localhost:11434/api/embed").mock(
         return_value=httpx.Response(200, json={"embeddings": [[0.1, 0.2, 0.3]]})

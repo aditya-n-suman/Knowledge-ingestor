@@ -28,6 +28,8 @@ knowledge crawl https://docs.example.com/ --depth 2 --max-pages 50
 knowledge ingest https://example.com --enrich
 knowledge search "some query"
 knowledge search "some query" --semantic
+knowledge ingest --file links.txt --extract-links
+knowledge fetch --file links.txt --min-delay 2 --max-delay 5
 ```
 
 `fetch` resolves each URL (following shortlink redirects), downloads it with
@@ -57,6 +59,17 @@ work). `search` looks up stored Documents by substring by default, or by
 embedding similarity with `--semantic` (requires documents ingested with
 `--enrich` and a working embedding provider).
 
+`ingest --extract-links` sends `--file`'s raw content through
+`config.ai_provider` to pull out URLs, instead of assuming one clean URL
+per line — useful for files with labels, prose, or trailing text mixed in
+(e.g. a pasted list of links with descriptions). Requires an AI provider.
+
+`--min-delay`/`--max-delay` (on `fetch`/`ingest`/`crawl`) add a random delay
+in seconds between requests to the same host, to avoid tripping a target
+site's bot/rate-limit detection when hitting many links from the same
+domain in one run. Disabled by default (`0`/`0`); also settable via
+`Config.min_request_delay`/`max_request_delay`.
+
 ## Configuration
 
 Settings are loaded from `knowledge.yaml` in the current directory if present:
@@ -69,6 +82,8 @@ cache_dir: cache
 output_dir: output
 max_depth: 2
 max_pages: 50
+min_request_delay: 0.0
+max_request_delay: 0.0
 storage_backend: markdown  # markdown | json | sqlite
 ai_provider: ""  # "" (disabled) | ollama
 ai_model: llama3

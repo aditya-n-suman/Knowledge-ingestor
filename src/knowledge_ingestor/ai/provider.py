@@ -20,3 +20,6 @@ class AIProvider(ABC):
 
     @abstractmethod
     async def embed(self, texts: list[str]) -> list[list[float]]: ...
+
+    @abstractmethod
+    async def extract_links(self, text: str) -> list[str]: ...

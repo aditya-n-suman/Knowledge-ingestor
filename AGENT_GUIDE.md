@@ -186,7 +186,12 @@ backends behind one `StorageBackend` contract), an optional AI layer
 (`AIProvider` contract, `OllamaProvider`: summary, flashcards, embeddings)
 feeding an enrich pipeline stage and embedding-similarity search, and the
 full resolve+discover+fetch+extract+plugin-dispatch+store(+enrich) pipeline
-wired to the CLI (`fetch`, `ingest`, `crawl`, `search`).
+wired to the CLI (`fetch`, `ingest`, `crawl`, `search`). Post-v0.9
+hardening: a per-host request throttle (`core/throttle.py`, `--min-delay`/
+`--max-delay`) to avoid tripping target sites' bot detection during bulk
+ingestion, and AI-assisted link extraction (`AIProvider.extract_links`,
+`ingest --extract-links`) for ingesting messy input files that mix URLs
+with labels/prose.
 
 ---
 

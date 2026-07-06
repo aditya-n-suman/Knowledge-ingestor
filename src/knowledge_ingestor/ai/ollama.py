@@ -28,6 +28,14 @@ _FLASHCARDS_SCHEMA = {
     "required": ["flashcards"],
 }
 
+_LINKS_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "links": {"type": "array", "items": {"type": "string"}},
+    },
+    "required": ["links"],
+}
+
 
 class OllamaProvider(AIProvider):
     """AIProvider backed by a local Ollama server."""
@@ -61,6 +69,19 @@ class OllamaProvider(AIProvider):
             Flashcard(question=card.get("question", ""), answer=card.get("answer", ""))
             for card in cards
         ]
+
+    async def extract_links(self, text: str) -> list[str]:
+        prompt = (
+            "Extract every http:// or https:// URL mentioned in the following "
+            "text, exactly as written (do not invent, complete, or modify any "
+            "URL). Return only the URLs.\n\n" + text
+        )
+        response = await self._generate(prompt, response_format=_LINKS_SCHEMA)
+        try:
+            links = json.loads(response).get("links", [])
+        except json.JSONDecodeError as exc:
+            raise AIError(f"Ollama returned malformed links JSON: {exc}") from exc
+        return [str(link) for link in links if link]
 
     async def embed(self, texts: list[str]) -> list[list[float]]:
         try:

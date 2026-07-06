@@ -7,6 +7,7 @@ from ..core import FetchResult, RetryPolicy
 from ..core.cache import HtmlCache
 from ..core.downloader import fetch
 from ..core.progress import build_progress
+from ..core.session import get_client
 from ..exceptions import ExtractionError, PluginError
 from ..extractors import extract_article
 from ..logger import logger
@@ -23,6 +24,7 @@ async def run_fetch_stage(
 ) -> list[FetchResult]:
     """Run the resolve+fetch stage over one or more URLs, bounded by config.concurrency."""
     config = config or Config()
+    get_client(config)
     cache = HtmlCache(config.cache_dir)
     policy = RetryPolicy(max_attempts=config.max_retries)
     semaphore = asyncio.Semaphore(config.concurrency)

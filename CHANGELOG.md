@@ -1,3 +1,38 @@
+# v0.10.0
+
+Two hardening features prompted by testing the pipeline against a real,
+messy input file (LinkedIn shortlinks with label/timestamp text mixed in):
+
+- Add `core.throttle`: a per-host request scheduler that spaces consecutive
+  requests to the same host by a random `[min_request_delay,
+  max_request_delay]` jitter, to avoid tripping a target site's bot/rate
+  detection during bulk ingestion. Wired into the shared httpx client via
+  an `event_hooks["request"]` hook (`core/session.py`), so it applies to
+  every request — including each hop of a redirect chain — with no changes
+  needed in `resolver.py`/`downloader.py`. New `Config.min_request_delay`/
+  `max_request_delay` (default `0.0`, disabled) and `--min-delay`/
+  `--max-delay` on `fetch`/`ingest`/`crawl`.
+  - Fixes a latent bug as a side effect: `run_fetch_stage`/`crawl_links`/
+    `discover_urls` now call `get_client(config)` explicitly before their
+    first request, so the loaded `Config`'s `timeout`/`concurrency` (and now
+    the delay settings) actually reach the shared client — previously every
+    call site invoked `get_client()` bare, so the singleton was always built
+    from `Config()` defaults regardless of `knowledge.yaml`.
+- Add `AIProvider.extract_links` / `OllamaProvider.extract_links`: given
+  arbitrary unstructured text, the model pulls out every URL (structured
+  JSON-array output, same technique as flashcards). Add `knowledge ingest
+  --extract-links`, which sends `--file`'s raw content through this instead
+  of assuming one-clean-URL-per-line, so files with labels, prose, or
+  trailing timestamps ingest correctly.
+- Verified live: `extract_links` against the real messy `links.txt` (33
+  URLs recovered correctly, including deduplicating one link that appeared
+  under two different labels); the throttle's timing was confirmed against
+  real `lnkd.in` requests (wall-clock matched the configured delay). Full
+  redirect resolution for those specific links was still blocked by
+  LinkedIn's per-IP rate limiting from earlier testing — the delay didn't
+  clear an already-tripped block within one session, which is a target-site
+  cooldown characteristic, not a defect in the throttle itself.
+
 # v0.9.0
 
 - Add the AI layer (`ai/`), scoped to this milestone's four capabilities —

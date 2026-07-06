@@ -1,7 +1,8 @@
 from .base import Plugin
+from .github import GitHubPlugin
 from .youtube import YouTubePlugin
 
-_PLUGINS: list[Plugin] = [YouTubePlugin()]
+_PLUGINS: list[Plugin] = [YouTubePlugin(), GitHubPlugin()]
 
 
 async def find_plugin(url: str) -> Plugin | None:

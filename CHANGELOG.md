@@ -1,3 +1,19 @@
+# v0.6.0
+
+- Add the `GitHubPlugin` (`plugins/github.py`), covering three modes
+  detected from the URL shape:
+  - repo root / `tree/<branch>` → README, via the GitHub Contents API
+    (`/repos/{owner}/{repo}/readme`), with repo metadata (description,
+    topics, language, stars, license).
+  - `wiki` / `wiki/<Page>` → fetches the rendered wiki page and reuses
+    `extract_article` (trafilatura/readability) to pull out its content.
+  - `blob/<branch>/<path>` → a single file via the Contents API
+    (`/repos/{owner}/{repo}/contents/{path}`), base64-decoded.
+  - Honors a `GITHUB_TOKEN` env var for the GitHub API's higher
+    authenticated rate limit; unauthenticated requests still work.
+- Register `GitHubPlugin` in the plugin registry alongside `YouTubePlugin`
+  — `knowledge ingest` now dispatches GitHub URLs automatically.
+
 # v0.5.0
 
 - Add the `YouTubePlugin` (`plugins/youtube.py`), the first concrete

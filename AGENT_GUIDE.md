@@ -176,12 +176,12 @@ src/knowledge_ingestor
 
 Current implementation
 
-v0.3-v0.5 implemented: networking core (async session, resolver, retry,
+v0.3-v0.6 implemented: networking core (async session, resolver, retry,
 progress, raw HTML caching), extraction engine (trafilatura/readability +
-Markdown conversion), the first Plugin (`YouTubePlugin`: transcript,
-chapters, metadata) with a minimal plugin registry, and the
-resolve+fetch+extract+plugin-dispatch pipeline wired to the CLI (`fetch`,
-`ingest`).
+Markdown conversion), a plugin registry with `YouTubePlugin` (transcript,
+chapters, metadata) and `GitHubPlugin` (README, wiki page, single doc
+file), and the resolve+fetch+extract+plugin-dispatch pipeline wired to the
+CLI (`fetch`, `ingest`).
 
 ---
 
@@ -686,6 +686,8 @@ GitHub ingestion
 * README
 * Wiki
 * Docs
+
+Completed
 
 ---
 

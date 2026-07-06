@@ -33,14 +33,15 @@ retry/backoff, and caches the raw HTML on disk so repeat runs are free.
 `ingest` dispatches each URL to a matching plugin — YouTube (transcript,
 chapters, metadata) or GitHub (README, a wiki page, or a single file) — or,
 for everything else, falls back to fetch + article extraction (via
-`trafilatura`, falling back to `readability` when needed). Each result is
-written as Markdown to `output_dir`. Set `GITHUB_TOKEN` in the environment
-to use the GitHub API's higher authenticated rate limit.
+`trafilatura`, falling back to `readability` when needed). Each resulting
+`Document` is persisted through the configured storage backend. Set
+`GITHUB_TOKEN` in the environment to use the GitHub API's higher
+authenticated rate limit.
 
 `crawl` discovers pages from a seed URL — preferring its `sitemap.xml`, and
 otherwise following same-domain links up to `--depth` — then runs each
-discovered URL through the same dispatch as `ingest`. It respects
-`robots.txt` and stops at `--max-pages`.
+discovered URL through the same dispatch and storage as `ingest`. It
+respects `robots.txt` and stops at `--max-pages`.
 
 ## Configuration
 
@@ -54,6 +55,7 @@ cache_dir: cache
 output_dir: output
 max_depth: 2
 max_pages: 50
+storage_backend: markdown  # markdown | json | sqlite
 plugins:
   github: true
 ```

@@ -1,3 +1,25 @@
+# v0.8.0
+
+- Implement the storage layer (`storage/`), giving `StorageBackend` (defined
+  in v0.3) its first concrete implementations:
+  - `MarkdownStorage`: one `.md` file per document with a YAML frontmatter
+    header (id, title, url, metadata, headings, images, links).
+  - `JSONStorage`: one `.json` file per document (full `Document` as JSON).
+  - `SQLiteStorage`: one `documents` table, list/dict fields JSON-encoded
+    into TEXT columns; each op runs in a thread via `asyncio.to_thread`
+    since `sqlite3` is synchronous.
+  - `storage.filesystem.FilesystemPaths`: shared id→path convention reused
+    by the two file-based backends.
+  - All three backends' `search` does a case-insensitive substring match
+    over title/content — deliberately simple; full-text/embeddings search
+    is v0.9 scope.
+- Add `storage.build_storage(config)`, a factory selecting the backend from
+  the new `Config.storage_backend` field (`markdown` | `json` | `sqlite`,
+  default `markdown`).
+- `knowledge ingest` and `knowledge crawl` now persist each `Document`
+  through the configured storage backend instead of writing Markdown files
+  directly.
+
 # v0.7.0
 
 - Add the documentation crawler (`pipeline.discover_urls`): given a seed

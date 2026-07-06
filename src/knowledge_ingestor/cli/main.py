@@ -11,6 +11,7 @@ from ..core.session import close_client
 from ..logger import configure_logging
 from ..models import Document
 from ..pipeline import discover_urls, run_fetch_stage, run_ingest_stage
+from ..storage import build_storage
 
 app = typer.Typer()
 console = Console()
@@ -33,17 +34,19 @@ def _collect_urls(urls: list[str] | None, file: Path | None) -> list[str]:
     return all_urls
 
 
-def _write_documents(documents: list[Document], config: Config) -> None:
-    config.output_dir.mkdir(parents=True, exist_ok=True)
+async def _persist_documents(documents: list[Document], config: Config) -> None:
+    storage = build_storage(config)
+    for document in documents:
+        await storage.save(document)
+
+
+def _print_documents_table(documents: list[Document]) -> None:
     table = Table()
     table.add_column("Title")
     table.add_column("URL")
     table.add_column("Words")
     table.add_column("Source")
     for document in documents:
-        (config.output_dir / f"{document.id}.md").write_text(
-            document.content, encoding="utf-8"
-        )
         table.add_row(
             document.title,
             document.url,
@@ -97,19 +100,21 @@ def ingest(
     file: Path = typer.Option(None, "--file", "-f", help="File with one URL per line"),
     verbose: int = typer.Option(0, "--verbose", "-v", count=True),
 ) -> None:
-    """Fetch and extract one or more URLs into Markdown documents."""
+    """Fetch, extract, and store one or more URLs as Documents."""
     configure_logging(verbose)
     all_urls = _collect_urls(urls, file)
     config = Config.load()
 
-    async def _run() -> list:
+    async def _run() -> list[Document]:
         try:
-            return await run_ingest_stage(all_urls, config)
+            documents = await run_ingest_stage(all_urls, config)
+            await _persist_documents(documents, config)
+            return documents
         finally:
             await close_client()
 
     documents = asyncio.run(_run())
-    _write_documents(documents, config)
+    _print_documents_table(documents)
 
 
 @app.command()
@@ -131,9 +136,11 @@ def crawl(
         try:
             urls = await discover_urls(seed_url, config)
             console.print(f"Discovered {len(urls)} page(s)")
-            return await run_ingest_stage(urls, config)
+            documents = await run_ingest_stage(urls, config)
+            await _persist_documents(documents, config)
+            return documents
         finally:
             await close_client()
 
     documents = asyncio.run(_run())
-    _write_documents(documents, config)
+    _print_documents_table(documents)

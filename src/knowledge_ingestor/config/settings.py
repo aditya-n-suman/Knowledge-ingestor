@@ -18,6 +18,7 @@ class Config:
     plugins: dict[str, bool] = field(default_factory=dict)
     max_depth: int = 2
     max_pages: int = 50
+    storage_backend: str = "markdown"
 
     @classmethod
     def from_file(cls, path: Path) -> Config:
